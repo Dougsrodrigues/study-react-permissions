@@ -1,19 +1,21 @@
+import { useAbility } from "@casl/react";
 import React from "react";
-import { fetchTasks, create, removeTask, updateToClosed } from "./services";
+import { Can, GuardContext } from "../../guards/GuardContext";
+import { create, fetchTasks, removeTask, updateToClosed } from "./services";
 import {
   ActionContainer,
   Container,
   Divider,
   DoneButton,
+  Form,
+  Id,
+  Input,
   ListContainer,
   ListItem,
   NewButton,
-  RemoveButton,
-  Input,
   Page,
-  Form,
+  RemoveButton,
   Title,
-  Id,
 } from "./styles";
 
 type Task = {
@@ -59,36 +61,41 @@ export const Home = () => {
     refresh();
   };
 
+  const ability = useAbility(GuardContext);
   return (
     <Page>
       <Container>
         <Title>Task Manager</Title>
 
-        <Form onSubmit={onSubmit}>
-          <Input type="text" name="title" required />
-          <NewButton type="submit">Criar nova tarefa</NewButton>
-        </Form>
+        <Can I="create" a="Task">
+          <Form onSubmit={onSubmit}>
+            <Input type="text" name="title" required />
+            <NewButton type="submit">Criar nova tarefa</NewButton>
+          </Form>
+        </Can>
 
         <Divider />
 
-        <ListContainer>
-          {tasks.map((task) => (
-            <ListItem $open={task.status === "open"} key={task.id}>
-              <Id>{task.id}</Id>
-              <p>{task.title}</p>
-              <ActionContainer>
-                {task.status === "open" && (
-                  <DoneButton onClick={() => onDone(task.id)}>
-                    Concluir
-                  </DoneButton>
-                )}
-                <RemoveButton onClick={() => onRemove(task.id)}>
-                  Excluir
-                </RemoveButton>
-              </ActionContainer>
-            </ListItem>
-          ))}
-        </ListContainer>
+        {ability.can("read", "Task") && (
+          <ListContainer>
+            {tasks.map((task) => (
+              <ListItem $open={task.status === "open"} key={task.id}>
+                <Id>{task.id}</Id>
+                <p>{task.title}</p>
+                <ActionContainer>
+                  {task.status === "open" && (
+                    <DoneButton onClick={() => onDone(task.id)}>
+                      Concluir
+                    </DoneButton>
+                  )}
+                  <RemoveButton onClick={() => onRemove(task.id)}>
+                    Excluir
+                  </RemoveButton>
+                </ActionContainer>
+              </ListItem>
+            ))}
+          </ListContainer>
+        )}
       </Container>
     </Page>
   );
